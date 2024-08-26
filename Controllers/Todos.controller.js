@@ -3,7 +3,7 @@ import SubTodo from "../Models/sub_Todos.models.js";
 
 export const fetchTodos = async (req, res) => {
   try {
-    const todos = await Todo.find().populate('SubTodos').exec();
+    const todos = await Todo.find().populate("SubTodos").exec();
     res.json(todos);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -30,12 +30,12 @@ export const addTodo = async (req, res) => {
       title,
       message,
     });
-    const saveTodo= await addTodo.save();
+    const saveTodo = await addTodo.save();
     const todosData = await Todo.findOne({ Type: type });
     if (todosData) {
       todosData.SubTodos.push(saveTodo._id);
       await todosData.save();
-      await todosData.populate('SubTodos');
+      await todosData.populate("SubTodos");
       res.status(200).json(todosData);
     } else {
       res.status(404).json({ message: "todo not found" });
@@ -49,19 +49,53 @@ export const addTodo = async (req, res) => {
 export const moveTodo = async (req, res) => {
   const { sourceType, targetType, todoId } = req.body;
   try {
-    await Todo.findOneAndUpdate({Type:sourceType},{
-        $pull:{SubTodos:todoId}
-    })
-    await Todo.findOneAndUpdate({Type:targetType},{
-        $push:{SubTodos:todoId}
-    })
-    res.status(200).json({sourceType, targetType, todoId});
+    await Todo.findOneAndUpdate(
+      { Type: sourceType },
+      {
+        $pull: { SubTodos: todoId },
+      }
+    );
+    await Todo.findOneAndUpdate(
+      { Type: targetType },
+      {
+        $push: { SubTodos: todoId },
+      }
+    );
+    res.status(200).json({ sourceType, targetType, todoId });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
   }
 };
 
-export const deleteTodo=async(req,res)=>{
+export const reorderTodo = async (req, res) => {
+  const { type, sourceIndex, destinationIndex } = req.body;
+  try {
+    const Todos = await Todo.findOne({ Type: type }).populate("SubTodos");
+    if (!Todos) res.status(404).json({ message: "Todo not found" });
+    let swap = Todos.SubTodos[sourceIndex];
+    Todos.SubTodos[sourceIndex] = Todos.SubTodos[destinationIndex];
+    Todos.SubTodos[destinationIndex] = swap;
+    await Todos.save();
+    res.status(200).json(Todos);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+  }
+};
 
-}
+export const deleteTodo = async (req, res) => {
+  const { type, id } = req.body;
+  try {
+    const todo = await Todo.findOneAndUpdate(
+      { Type: type },
+      { $pull: { SubTodos:id}},
+      { new: true }
+    );
+   const sub_Todos= await SubTodo.findByIdAndDelete(id); 
+    res.status(200).json({Type:todo.Type,subtodo_id:sub_Todos._id});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server erroe" });
+  }
+};
