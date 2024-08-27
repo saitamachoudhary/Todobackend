@@ -84,6 +84,18 @@ export const reorderTodo = async (req, res) => {
   }
 };
 
+export const editTodo=async(req,res)=>{
+  const{Type,_id,title,message}=req.body;
+  try {
+    const updateTodo=await SubTodo.findByIdAndUpdate(_id,{title,message},{new:true});
+    if(!updateTodo) res.status(404).json({message:"update failed"});
+    res.status(200).json({updateTodo,Type});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({message:"server error"})
+  }
+}
+
 export const deleteTodo = async (req, res) => {
   const { type, id } = req.body;
   try {

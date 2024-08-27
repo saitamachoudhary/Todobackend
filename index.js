@@ -14,7 +14,7 @@ mongoose.connect('mongodb+srv://abhinavlumenore2024:ABhi123@abhinavdb.axbmw.mong
 
 app.use('/api/todos',router);
 
-app.listen(Port,()=>{
-    console.log(`listening to port ${Port}`)
+app.listen(Port,()=>{ 
+    console.log(`listening to port ${Port}`)    
 })
 
